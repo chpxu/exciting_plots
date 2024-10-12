@@ -61,7 +61,7 @@ def option_parser():
     help_sharex = "Whether the x-axes in subplot should share the same domain."
     help_sharey = "Whether the y-axes in subplot should share the same domain."
     help_path = "Path through Brillouin Zone to print on the x-axis of bandstructure. Default is 'hexagonal' which corresponds to the tuple ('W','L','$\Gamma$','X','W','K')."
-    help_scissor = "Scissor shift applied to the conduction band."
+    help_scissor = "Scissor shift applied to the conduction band in eV."
     #---------------------------------------------------------------------------
 
     p.add_argument('-d','--directory',
@@ -169,6 +169,14 @@ def extract_lambda(filename:str):
     index = int(strindex)
     return index
 
+def with_scissor(energy, scissor):
+    """
+    Shifts the conduction bands upwards by scissor [eV]
+    """
+    energy_copy = energy
+    energy_copy[:,1][energy_copy[:,1] > 0] += scissor
+    return energy_copy
+
 def main(input_options):
     '''
     input:
@@ -247,9 +255,6 @@ def main(input_options):
             #QP_corrected = read_input("BAND-QP.OUT")
             print(files[counter])
             index = extract_lambda(files[counter])
-            #if (qp and eunit == "eV"):
-            #    output[0][:,1,:] *= ha2ev
-                
             col.xaxis.grid( True, which='major', color='k', linestyle='-', linewidth=1)
             col.xaxis.set_label_position( 'bottom')
             col.set_xticks(output[4])
@@ -265,13 +270,14 @@ def main(input_options):
             col2.text(0,6,f"$\lambda = {index}$",zorder=50, backgroundcolor="w", color="red", fontsize=12, bbox=dict(boxstyle= "square", edgecolor ="black", facecolor="w"))
             #col2.text(0,-1.5,f"{scale[counter]}",zorder=50, backgroundcolor="w", color="black", fontsize=8, bbox=dict(boxstyle= "square", edgecolor ="black", facecolor="w"))
             # band-structure and weights
+            shifted_bands = with_scissor(output[0], scissor)
             for i in range( output[1][2]):
-               # print(output[0][i,1,:])
-                col.plot( output[0][i,0,:], output[0][i,1,:] + scissor, 'b', lw=1.0, zorder=10)
+               #print(output[0][i,1,:])
+                col.plot( output[0][i,0,:], shifted_bands[i,1,:], 'b', lw=1.0, zorder=10)
                # col.set_yticks(np.arange(ymin,ymax,1/len(output[0])),minor=True)
             for i in range( output[1][2]):
                 #normedcircles = l2norm(np.arange(0,1,1/len(output[0][i,2,:])),output[0][i,2,:])
-                col.scatter( output[0][i,0,:], output[0][i,1,:] + scissor, s=(scale[scale_counter]*output[0][i,2,:])**2, lw=0.35, edgecolor='r', facecolor='none', zorder=11)
+                col.scatter( output[0][i,0,:], shifted_bands[i,1,:], s=(scale[scale_counter]*output[0][i,2,:])**2, lw=0.35, edgecolor='r', facecolor='none', zorder=11)
 
             # Fermi level
             col.plot( [xmin, xmax], [0, 0], 'k', lw=2.0, ls='-')
