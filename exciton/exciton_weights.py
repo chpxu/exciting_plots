@@ -263,8 +263,9 @@ def main(input_options):
             for line in col.get_xticklines() + col.get_yticklines():
                 line.set_markersize(5)
                 line.set_markeredgewidth(1)
-            xmin = np.amin( output[0][:,0,:])
-            xmax = np.amax( output[0][:,0,:])
+            x_vals =  output[0][:,0,:]
+            xmin = np.amin(x_vals)
+            xmax = np.amax(x_vals)
             col.set_xlim(xmin, xmax)
             col.set_ylim(ymin, ymax)           
             col2.text(0,6,f"$\lambda = {index}$",zorder=50, backgroundcolor="w", color="red", fontsize=12, bbox=dict(boxstyle= "square", edgecolor ="black", facecolor="w"))
@@ -275,7 +276,7 @@ def main(input_options):
                #print(output[0][i,1,:])
                 col.plot( output[0][i,0,:], shifted_bands[i,1,:], 'b', lw=1.0, zorder=10)
                # col.set_yticks(np.arange(ymin,ymax,1/len(output[0])),minor=True)
-            for i in range( output[1][2]):
+            #for i in range( output[1][2]):
                 #normedcircles = l2norm(np.arange(0,1,1/len(output[0][i,2,:])),output[0][i,2,:])
                 col.scatter( output[0][i,0,:], shifted_bands[i,1,:], s=(scale[scale_counter]*output[0][i,2,:])**2, lw=0.35, edgecolor='r', facecolor='none', zorder=11)
 
