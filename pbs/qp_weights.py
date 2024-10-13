@@ -21,7 +21,7 @@ bo2an = 0.52917721067
 
 def option_parser():
     """
-    Parse command line inputs for exciton and QP weights
+    Parse command line inputs for QP weights
 
     Parse:
         directory
@@ -34,6 +34,7 @@ def option_parser():
         path
         qp
         eunit
+        scissor
     :return input_options: Dictionary of parsed command line arguments
     """
     p = ap.ArgumentParser(description=\
@@ -53,13 +54,13 @@ def option_parser():
     help_ymin = "Minimum y-value to output from."
     help_ymax = "Maximum y-value to output from."
 
-    #help_nrows = "Number of rows in subplot."
-    #help_ncols = "Number of columns in subplot."
     help_sharex = "Whether the x-axes in subplot should share the same domain."
     help_sharey = "Whether the y-axes in subplot should share the same domain."
     help_path = "Path through Brillouin Zone to print on the x-axis of bandstructure. Default is 'hexagonal' which corresponds to the tuple ('W','L','$\Gamma$','X','W','K')."
     help_eunit = "Energy units to use in the y-axis. Defaults to eV, which will autoscale QP weights if -qp is set."
     help_norbitals = "Number of orbital contributions to plot for QP weights. Defaults to 3 (s,p,d) and must be at least 1."
+    help_scissor = "Scissor shift applied to the conduction band in eV."
+
     #---------------------------------------------------------------------------
 
     p.add_argument('-d','--directory',
@@ -93,6 +94,7 @@ def option_parser():
     p.add_argument('-shy','--share_y', default="col", help = help_sharey)
     p.add_argument('-eu', '--eunit', default="eV", choices=['eV', 'Ha'], help=help_eunit)
     p.add_argument('-no', '--norbitals', type=int, default=3, help=help_norbitals)
+    p.add_argument('--scissor', type=float,default=0,help=help_scissor)
     #---------------------------------------------------------------------------
 
     args = p.parse_args()
@@ -121,6 +123,7 @@ def option_parser():
     input_options['path'] = args.path
     input_options['eunit'] = args.eunit
     input_options['norbitals'] = args.norbitals
+    input_options['scissor'] = args.scissor
     return input_options
 
 # Remove or add image output formats
@@ -212,6 +215,13 @@ def l2norm(x,y):
     else:
         normed = (y - np.min(y)) / (denom)
         return normed
+def with_scissor(energy, scissor):
+    """
+    Shifts the conduction bands upwards by scissor [eV]
+    """
+    energy_copy = energy
+    energy_copy[:,1][energy_copy[:,1] > 0] += scissor
+    return energy_copy
 def main(input_options):
     '''
     input:
@@ -234,7 +244,7 @@ def main(input_options):
     eunit: str = input_options['eunit']
     norbitals: int = input_options['norbitals']
     path_BZ = ('A','H','$\Gamma$','M','L','K') if path == 'hexagonal' else ('W','L','$\Gamma$','X','W','K')
-    
+    scissor: float = input_options['scissor']
     
     #########################
     # Settings for the plot #
@@ -339,15 +349,16 @@ def main(input_options):
         print(colors[species_index])
         col2.text(0.2,0.2,f"{ordered_species[species_index]} {subshells[orbital_index]}",zorder=50, backgroundcolor="w", color=colors[species_index], fontsize=12, bbox=dict(boxstyle= "square", edgecolor=colors[species_index], facecolor="w"))
         col2.text(0,6,f"{scale[counter]}",zorder=50, backgroundcolor="w", color=colors[species_index], fontsize=12, bbox=dict(boxstyle= "square", edgecolor =colors[species_index], facecolor="w"))
+        shifted_bands = with_scissor(output[0]*ha2ev, scissor)
         for j in range( output[1][2]):
-            ax.plot( output[0][j,0,:], output[0][j,1,:]*ha2ev, 'k', lw=1.0, zorder=10)
+            ax.plot( output[0][j,0,:], shifted_bands[j,1,:], 'k', lw=1.0, zorder=10)
         if len(scale) > 1:
             for j in range( output[1][2]):
                 #normedcircles = l2norm(np.arange(0,1,1/len(qp_data[species_index][j,orbital_index,:])),qp_data[species_index][j,orbital_index,:])
-                ax.scatter( output[0][j,0,:], output[0][j,1,:]*ha2ev, s=(scale[counter]*qp_data[species_index][orbital_index][0][j])**2, lw=0.35, edgecolor=colors[species_index], facecolor='none', zorder=11)
+                ax.scatter( output[0][j,0,:], shifted_bands[j,1,:], s=(scale[counter]*qp_data[species_index][orbital_index][0][j])**2, lw=0.35, edgecolor=colors[species_index], facecolor='none', zorder=11)
         else:
             for j in range( output[1][2]):
-                ax.scatter( output[0][j,0,:], output[0][j,1,:]*ha2ev, s=(scale[0]*qp_data[species_index][orbital_index][0][j])**2, lw=0.35, edgecolor=colors[species_index], facecolor='none', zorder=11)
+                ax.scatter( output[0][j,0,:], shifted_bands[j,1,:], s=(scale[0]*qp_data[species_index][orbital_index][0][j])**2, lw=0.35, edgecolor=colors[species_index], facecolor='none', zorder=11)
         
     
         

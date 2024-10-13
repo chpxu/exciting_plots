@@ -47,7 +47,7 @@ For multiple atoms of the same species, the blocks are then added together to gi
 ### Using `qp_weights.py`
 The file to call is `qp_weights.py` and should work for Python `>= 3.7`, NumPy `< 2`. Not tested with NumPy `2.x`. Example usage:
 ```sh
-python3 qp_weights.py -f [files] -y1 e_1 -y2 e_2 -s float | [float] -p "cubic" | "hexagonal" -shx "none" | "all" -shy "none" | "all" -norbitals 3
+python3 qp_weights.py -f [files] -y1 e_1 -y2 e_2 -s float | [float] -p "cubic" | "hexagonal" -shx "none" | "all" -shy "none" | "all" --norbitals 3 --scissor 0.0 | float
 ```
 
 - `-f` is the list of BAND files. Order does not matter - it sorts them In the future, can just make a function to automatically find BAND files.
@@ -57,6 +57,7 @@ python3 qp_weights.py -f [files] -y1 e_1 -y2 e_2 -s float | [float] -p "cubic" |
 - `-s`  is the scale factor. A single float scales the weights for all plots. Otherwise must be a list of floats of size $N\_s \times \text{norbitals}$
 - `-shx` is "none" or "all" and controls whether each plot has its own labelled x-axis ("none") or shared.
 - `-shy` is "none" or "all" and controls whether each plot has its own labelled y-axis ("none") or shared.
+- `--scissor` is the scissor shift to apply to the conduction bands in eV.
 
 This file will output bandstructures in a $N_s \times \text{norbitals}$ grid with a box in the top left containing the scale factor, and each plot labelled with species and orbital.
 
