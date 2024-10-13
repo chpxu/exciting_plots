@@ -53,11 +53,39 @@ python3 qp_weights.py -f [files] -y1 e_1 -y2 e_2 -s float | [float] -p "cubic" |
 - `-f` is the list of BAND files. Order does not matter - it sorts them In the future, can just make a function to automatically find BAND files.
 - `-y1 -y2` is the energy range, i.e. y-axis range. Energy is automatically converted to eV.
 - `-p "cubic" | "hexagonal"` controls the x-axis tick labels for the path. Can be manually adjusted to your liking.
-- `-norbitals` is the number of orbitals to plot. By default, it is 3 (s,p,d).
+- `-no, --norbitals` is the number of orbitals to plot. By default, it is 3 (s,p,d).
 - `-s`  is the scale factor. A single float scales the weights for all plots. Otherwise must be a list of floats of size $N\_s \times \text{norbitals}$
 - `-shx` is "none" or "all" and controls whether each plot has its own labelled x-axis ("none") or shared.
 - `-shy` is "none" or "all" and controls whether each plot has its own labelled y-axis ("none") or shared.
 - `--scissor` is the scissor shift to apply to the conduction bands in eV.
 
 This file will output bandstructures in a $N_s \times \text{norbitals}$ grid with a box in the top left containing the scale factor, and each plot labelled with species and orbital.
+
+## Exciton Weights
+
+Exciton weights are a sum of absolute-squared BSE eigenvectors for electron-hole interactions. The logic for implementing visualisation is nearly identical to that of projectd bandstructures (see above).
+
+### Data files for exciton weights
+Once you have run the appropriate `<storeexcitons>`, `<writeexcitons>` with the element `<doonly task="writekpathweights" />` inside `<plan>`, a directory called `KPATHEXC` is created. Inside are 2 sets of files, for each exciton. These are `KPATH_<BSEtype>_QMTxxx_LAMBDAyyyyyy.OUT` and  `WEIGHTS_<BSEtype>_QMTxxx_LAMBDAyyyyyy.OUT` where `yyyyyy` is the exciton index. The `WEIGHTS` file stores the raw excitonic weights whilst `KPATH` contains the weights plotted along the BZ path of the  bandstructure. For visualisation, only the `KPATH` files matter.
+
+The `KPATH` files have 3 columns: the kpath (the position along the BZ path), the energy of the bands and the excitonic weights in that order.
+
+### Using exciton_weights.py
+This file is found in the `exciton` folder.
+
+ Example usage:
+```sh
+python3 exciton_weights.py -f [files] -y1 e_1 -y2 e_2 -s float | [float] -p "cubic" | "hexagonal" -shx "none" | "all" -shy "none" | "all" -nr int -nc int --scissor 0.0 | float
+```
+
+- `-f` is the list of KPATH files. Order DOES matter - it will plot them as inputted.
+- `-y1 -y2` is the energy range, i.e. y-axis range. Energy is automatically converted to eV.
+- `-p "cubic" | "hexagonal"` controls the x-axis tick labels for the path. Can be manually adjusted to your liking.
+- `-s`  is the scale factor. A single float scales the weights for all plots. Otherwise must be a list of floats equal to the number of input files.
+- `-shx` is "none" or "all" and controls whether each plot has its own labelled x-axis ("none") or shared.
+- `-shy` is "none" or "all" and controls whether each plot has its own labelled y-axis ("none") or shared.
+- `--scissor` is the scissor shift to apply to the conduction bands in eV.
+- `-nr, -nc` control the number of rows and columns to plot respectively. It plots the graphs left-to-right and top-to-bottom. Note that these parameters will raise an error if `nr * nc != len(files)`.
+
+This file will output bandstructures in a $n_r \times n_c$ grid with a box in the top left containing the exciton index.
 
